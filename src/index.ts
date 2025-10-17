@@ -25,10 +25,64 @@ const JALALI_WEEKDAYS = [
   "پنج‌شنبه",
   "جمعه",
 ];
+const J_DAYS_IN_MONTH = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 
 function toPersianNum(input: string | number): string {
   const str = String(input);
   return str.replace(/[0-9]/g, (w) => PERSIAN_NUMBERS[+w]);
+}
+
+function leapDays(jy: number): number {
+  return Math.floor(jy / 33) * 8 + Math.floor(((jy % 33) + 3) / 4);
+}
+
+export function isJalaliLeapYear(year: number): boolean {
+  const jy = year - 979;
+  const leap_current = leapDays(jy);
+  const leap_next = leapDays(jy + 1);
+  return leap_next - leap_current === 1;
+}
+
+export function isValidJalali(
+  year: number,
+  month: number,
+  day: number
+): boolean {
+  if (year < 1 || month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const daysInMonth = J_DAYS_IN_MONTH[month - 1];
+  const isLeap = isJalaliLeapYear(year);
+  if (month === 12 && isLeap) return day <= 30;
+  return day <= daysInMonth;
+}
+
+export function daysInJalaliMonth(year: number, month: number): number {
+  if (month < 1 || month > 12) return 0;
+  if (month <= 6) return 31;
+  if (month < 12) return 30;
+  return isJalaliLeapYear(year) ? 30 : 29;
+}
+
+export function startOfJalaliMonth(parts: JalaliDateParts): JalaliDateParts {
+  const date = fromJalali(parts.year, parts.month, 1);
+  const newParts = toJalali(date);
+  return {
+    ...newParts,
+    hour: parts.hour,
+    minute: parts.minute,
+    second: parts.second,
+  };
+}
+
+export function endOfJalaliMonth(parts: JalaliDateParts): JalaliDateParts {
+  const days = daysInJalaliMonth(parts.year, parts.month);
+  const date = fromJalali(parts.year, parts.month, days);
+  const newParts = toJalali(date);
+  return {
+    ...newParts,
+    hour: parts.hour,
+    minute: parts.minute,
+    second: parts.second,
+  };
 }
 
 export function addToJalali(
@@ -195,4 +249,9 @@ export default {
   isBefore,
   isAfter,
   isSameDay,
+  isValidJalali,
+  isJalaliLeapYear,
+  daysInJalaliMonth,
+  startOfJalaliMonth,
+  endOfJalaliMonth,
 };
