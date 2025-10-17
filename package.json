@@ -1,0 +1,25 @@
+{
+  "name": "solar-jalali-ts",
+  "version": "1.0.0",
+  "description": "A standalone, lightweight Jalali date utility written in TypeScript.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "ts-node src/test.ts"
+  },
+  "keywords": [
+    "jalali",
+    "solar",
+    "persian",
+    "date",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
