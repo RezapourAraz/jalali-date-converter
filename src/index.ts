@@ -2,6 +2,7 @@ import { gregorianToJalali, jalaliToGregorian } from "./converter";
 import { JalaliDateParts } from "./types";
 
 const PERSIAN_NUMBERS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+const LATIN_NUMBERS = "0123456789";
 const JALALI_MONTHS = [
   "فروردین",
   "اردیبهشت",
@@ -16,6 +17,20 @@ const JALALI_MONTHS = [
   "بهمن",
   "اسفند",
 ];
+const JALALI_MONTHS_SHORT = [
+  "فرو",
+  "ارد",
+  "خرد",
+  "تیر",
+  "مرد",
+  "شهر",
+  "مه",
+  "آبا",
+  "آذر",
+  "دی",
+  "بهم",
+  "اسف",
+];
 const JALALI_WEEKDAYS = [
   "شنبه",
   "یکشنبه",
@@ -24,6 +39,39 @@ const JALALI_WEEKDAYS = [
   "چهارشنبه",
   "پنج‌شنبه",
   "جمعه",
+];
+const JALALI_QUARTERS = ["اول", "دوم", "سوم", "چهارم"];
+const JALALI_ORINAL_SUFFIXES = [
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
+  "ام",
 ];
 const J_DAYS_IN_MONTH = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 
@@ -34,6 +82,167 @@ function toPersianNum(input: string | number): string {
 
 function leapDays(jy: number): number {
   return Math.floor(jy / 33) * 8 + Math.floor(((jy % 33) + 3) / 4);
+}
+
+function toLatinDigits(input: string): string {
+  return input.replace(
+    new RegExp(`[${PERSIAN_NUMBERS.join("")}]`, "g"),
+    (w) => LATIN_NUMBERS[PERSIAN_NUMBERS.indexOf(w)]
+  );
+}
+
+// --- فرمتینگ پیشرفته: token‌های بیشتر ---
+export function formatJalali(
+  dateParts: JalaliDateParts,
+  formatString: string,
+  usePersianNumbers: boolean = true
+): string {
+  const { year, month, day, weekday, hour, minute, second } = dateParts;
+
+  const tokenMap = new Map<string, () => string>([
+    // نام ماه
+    ["jMMMM", () => JALALI_MONTHS[month - 1]],
+    ["jMMM", () => JALALI_MONTHS_SHORT[month - 1]],
+    // روز هفته
+    ["jW", () => JALALI_WEEKDAYS[weekday]],
+    // سال
+    ["jYYYY", () => String(year)],
+    ["jYY", () => String(year).slice(-2)],
+    // ماه
+    ["jMM", () => String(month).padStart(2, "0")],
+    ["jM", () => String(month)],
+    // روز
+    ["jDD", () => String(day).padStart(2, "0")],
+    ["jD", () => String(day)],
+    ["jDo", () => String(day) + JALALI_ORINAL_SUFFIXES[day - 1]], // ۲۵ام
+    // ربع سال
+    ["jQo", () => JALALI_QUARTERS[Math.floor((month - 1) / 3)]],
+    // هفته سال (تقریبی، بر اساس روز سال)
+    [
+      "jWo",
+      () => {
+        const date = fromJalali(year, month, day);
+        const startOfYear = fromJalali(year, 1, 1);
+        const weekNum =
+          Math.ceil(
+            (date.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000)
+          ) + 1;
+        return String(weekNum) + "ام";
+      },
+    ],
+    // ساعت/دقیقه/ثانیه
+    ["HH", () => String(hour).padStart(2, "0")],
+    ["H", () => String(hour)],
+    ["hh", () => String(hour % 12 || 12).padStart(2, "0")],
+    ["h", () => String(hour % 12 || 12)],
+    ["A", () => (hour >= 12 ? "بعدازظهر" : "قبلازظهر")],
+    ["a", () => (hour >= 12 ? "ب.ظ" : "ق.ظ")],
+    ["mm", () => String(minute).padStart(2, "0")],
+    ["m", () => String(minute)],
+    ["ss", () => String(second).padStart(2, "0")],
+    ["s", () => String(second)],
+    // timezone
+    [
+      "Z",
+      () => {
+        const offsetMinutes = -new Date().getTimezoneOffset();
+        const sign = offsetMinutes >= 0 ? "+" : "-";
+        const absMinutes = Math.abs(offsetMinutes);
+        const hours = Math.floor(absMinutes / 60);
+        const mins = absMinutes % 60;
+        return (
+          sign +
+          hours.toString().padStart(2, "0") +
+          ":" +
+          mins.toString().padStart(2, "0")
+        );
+      },
+    ],
+  ]);
+
+  let formatted = formatString;
+
+  const sortedTokens = Array.from(tokenMap.keys()).sort(
+    (a, b) => b.length - a.length
+  );
+
+  for (const token of sortedTokens) {
+    const regex = new RegExp(token, "g");
+    formatted = formatted.replace(regex, tokenMap.get(token)!());
+  }
+
+  if (usePersianNumbers) {
+    formatted = toPersianNum(formatted);
+  }
+
+  return formatted;
+}
+
+// --- Parse از string به JalaliDateParts (فیکس‌شده با چک undefined) ---
+export function parseJalali(
+  input: string,
+  formatString: string
+): JalaliDateParts | null {
+  // تبدیل اعداد فارسی به لاتین برای regex
+  const latinInput = toLatinDigits(input);
+
+  let year = 0,
+    month = 0,
+    day = 0;
+  let hour = 0,
+    minute = 0,
+    second = 0;
+
+  // استخراج سال: jYYYY یا jYY
+  const yearMatch = latinInput.match(/(\d{4})/);
+  if (yearMatch) {
+    year = parseInt(yearMatch[1], 10);
+    // حذف بخش سال از input برای استخراج day/month
+    const yearIndex = yearMatch.index!;
+    const beforeYear = latinInput.substring(0, yearIndex).trim();
+    const beforeMatches = beforeYear.match(/(\d{1,2})/g) || [];
+    if (beforeMatches.length >= 1) day = parseInt(beforeMatches[0]!, 10);
+    if (beforeMatches.length >= 2) month = parseInt(beforeMatches[1], 10); // اگر ماه عددی
+  } else {
+    // اگر jYY، مشابه
+    const yyMatch = latinInput.match(/(\d{2})/);
+    if (yyMatch) {
+      year = 1400 + parseInt(yyMatch[1], 10);
+      // مشابه حذف، اما ساده
+      day = parseInt(yyMatch[1], 10); // موقت، بهبود بدید
+    }
+  }
+
+  // ماه: jMMMM یا jMMM (از input اصلی)
+  if (month === 0) {
+    for (const m of JALALI_MONTHS) {
+      if (input.includes(m)) {
+        month = JALALI_MONTHS.indexOf(m) + 1;
+        break;
+      }
+    }
+  }
+  if (month === 0) {
+    for (const m of JALALI_MONTHS_SHORT) {
+      if (input.includes(m)) {
+        month = JALALI_MONTHS_SHORT.indexOf(m) + 1;
+        break;
+      }
+    }
+  }
+
+  if (!isValidJalali(year, month, day)) return null;
+
+  // زمان: فرض 00:00:00 اگر مشخص نباشه
+  return {
+    year,
+    month,
+    day,
+    weekday: 0, // بعداً با toJalali محاسبه کنید
+    hour,
+    minute,
+    second,
+  };
 }
 
 export function isJalaliLeapYear(year: number): boolean {
@@ -199,44 +408,44 @@ export function fromJalali(year: number, month: number, day: number): Date {
   return new Date(gYear, gMonth - 1, gDay);
 }
 
-export function formatJalali(
-  dateParts: JalaliDateParts,
-  formatString: string,
-  usePersianNumbers: boolean = true
-): string {
-  const { year, month, day, weekday, hour, minute, second } = dateParts;
+// export function formatJalali(
+//   dateParts: JalaliDateParts,
+//   formatString: string,
+//   usePersianNumbers: boolean = true
+// ): string {
+//   const { year, month, day, weekday, hour, minute, second } = dateParts;
 
-  const tokenMap = new Map<string, () => string>([
-    ["jMMMM", () => JALALI_MONTHS[month - 1]],
-    ["jW", () => JALALI_WEEKDAYS[weekday]],
-    ["jYYYY", () => String(year)],
-    ["jYY", () => String(year).slice(-2)],
-    ["jMM", () => String(month).padStart(2, "0")],
-    ["jM", () => String(month)],
-    ["jDD", () => String(day).padStart(2, "0")],
-    ["jD", () => String(day)],
-    ["HH", () => String(hour).padStart(2, "0")],
-    ["mm", () => String(minute).padStart(2, "0")],
-    ["ss", () => String(second).padStart(2, "0")],
-  ]);
+//   const tokenMap = new Map<string, () => string>([
+//     ["jMMMM", () => JALALI_MONTHS[month - 1]],
+//     ["jW", () => JALALI_WEEKDAYS[weekday]],
+//     ["jYYYY", () => String(year)],
+//     ["jYY", () => String(year).slice(-2)],
+//     ["jMM", () => String(month).padStart(2, "0")],
+//     ["jM", () => String(month)],
+//     ["jDD", () => String(day).padStart(2, "0")],
+//     ["jD", () => String(day)],
+//     ["HH", () => String(hour).padStart(2, "0")],
+//     ["mm", () => String(minute).padStart(2, "0")],
+//     ["ss", () => String(second).padStart(2, "0")],
+//   ]);
 
-  let formatted = formatString;
+//   let formatted = formatString;
 
-  const sortedTokens = Array.from(tokenMap.keys()).sort(
-    (a, b) => b.length - a.length
-  );
+//   const sortedTokens = Array.from(tokenMap.keys()).sort(
+//     (a, b) => b.length - a.length
+//   );
 
-  for (const token of sortedTokens) {
-    const regex = new RegExp(token, "g");
-    formatted = formatted.replace(regex, tokenMap.get(token)!());
-  }
+//   for (const token of sortedTokens) {
+//     const regex = new RegExp(token, "g");
+//     formatted = formatted.replace(regex, tokenMap.get(token)!());
+//   }
 
-  if (usePersianNumbers) {
-    formatted = toPersianNum(formatted);
-  }
+//   if (usePersianNumbers) {
+//     formatted = toPersianNum(formatted);
+//   }
 
-  return formatted;
-}
+//   return formatted;
+// }
 
 export default {
   toJalali,
