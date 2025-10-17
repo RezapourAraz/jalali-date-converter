@@ -1,6 +1,11 @@
-// src/test.ts
-
-import { toJalali, fromJalali, formatJalali } from "./index";
+import {
+  toJalali,
+  fromJalali,
+  formatJalali,
+  addToJalali,
+  differenceInDays,
+  isSameDay,
+} from "./index";
 
 const now = new Date();
 console.log(`✅ Gregorian Date ${now.toUTCString()}`);
@@ -27,3 +32,8 @@ console.log("Jalali to Gregorian : ");
 console.log(
   `${testJalaliYear}/${testJalaliMonth}/${testJalaliDay} Jalali equal to Gregorian : ${backToGregorian.toDateString()}`
 );
+
+const nowJalali = toJalali(new Date());
+const tomorrow = addToJalali(nowJalali, { days: 1 });
+console.log(differenceInDays(nowJalali, tomorrow));
+console.log(isSameDay(nowJalali, nowJalali));

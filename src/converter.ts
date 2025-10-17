@@ -1,4 +1,3 @@
-// converter.ts (اصلاح‌شده و بهینه‌شده با حلقه while برای ایمنی)
 import { GregorianParts, JalaliMathParts } from "./types";
 
 // gregorian months number of days
@@ -9,8 +8,6 @@ const J_DAYS_IN_MONTH = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 function isGregorianLeap(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
-
-// توابع اصلی تبدیل
 
 export function gregorianToJalali(
   gy: number,

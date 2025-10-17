@@ -31,6 +31,91 @@ function toPersianNum(input: string | number): string {
   return str.replace(/[0-9]/g, (w) => PERSIAN_NUMBERS[+w]);
 }
 
+export function addToJalali(
+  parts: JalaliDateParts,
+  {
+    days = 0,
+    months = 0,
+    years = 0,
+  }: { days?: number; months?: number; years?: number }
+): JalaliDateParts {
+  const date = fromJalali(parts.year, parts.month, parts.day);
+  const newDate = new Date(date);
+  newDate.setFullYear(newDate.getFullYear() + years);
+  newDate.setMonth(newDate.getMonth() + months);
+  newDate.setDate(newDate.getDate() + days);
+  const newParts = toJalali(newDate);
+  return {
+    ...newParts,
+    hour: parts.hour,
+    minute: parts.minute,
+    second: parts.second,
+  };
+}
+
+export function subtractFromJalali(
+  parts: JalaliDateParts,
+  {
+    days = 0,
+    months = 0,
+    years = 0,
+  }: { days?: number; months?: number; years?: number }
+): JalaliDateParts {
+  return addToJalali(parts, { days: -days, months: -months, years: -years });
+}
+
+export function differenceInDays(
+  parts1: JalaliDateParts,
+  parts2: JalaliDateParts
+): number {
+  const date1 = fromJalali(parts1.year, parts1.month, parts1.day);
+  const date2 = fromJalali(parts2.year, parts2.month, parts2.day);
+  const diffTime = Math.abs(date1.getTime() - date2.getTime());
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+export function differenceInMonths(
+  parts1: JalaliDateParts,
+  parts2: JalaliDateParts
+): number {
+  const date1 = fromJalali(parts1.year, parts1.month, parts1.day);
+  const date2 = fromJalali(parts2.year, parts2.month, parts2.day);
+  const months1 = date1.getFullYear() * 12 + date1.getMonth();
+  const months2 = date2.getFullYear() * 12 + date2.getMonth();
+  return Math.abs(months1 - months2);
+}
+
+export function isBefore(
+  parts1: JalaliDateParts,
+  parts2: JalaliDateParts
+): boolean {
+  const date1 = fromJalali(parts1.year, parts1.month, parts1.day);
+  const date2 = fromJalali(parts2.year, parts2.month, parts2.day);
+  return date1 < date2;
+}
+
+export function isAfter(
+  parts1: JalaliDateParts,
+  parts2: JalaliDateParts
+): boolean {
+  const date1 = fromJalali(parts1.year, parts1.month, parts1.day);
+  const date2 = fromJalali(parts2.year, parts2.month, parts2.day);
+  return date1 > date2;
+}
+
+export function isSameDay(
+  parts1: JalaliDateParts,
+  parts2: JalaliDateParts
+): boolean {
+  const date1 = fromJalali(parts1.year, parts1.month, parts1.day);
+  const date2 = fromJalali(parts2.year, parts2.month, parts2.day);
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
 export function toJalali(date: Date): JalaliDateParts {
   if (!(date instanceof Date) || isNaN(date.getTime())) {
     throw new Error("Input must be a valid Date object.");
@@ -103,4 +188,11 @@ export default {
   toJalali,
   fromJalali,
   formatJalali,
+  addToJalali,
+  subtractFromJalali,
+  differenceInDays,
+  differenceInMonths,
+  isBefore,
+  isAfter,
+  isSameDay,
 };
