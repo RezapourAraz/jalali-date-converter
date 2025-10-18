@@ -1,6 +1,6 @@
 {
   "name": "jalali-date-converter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Persian Jalali date converter and formatter",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
