@@ -6,14 +6,22 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node dist/test.js",
+    "test": "npm run build && node dist/test/test.js",
     "test:dev": "ts-node test/test.ts"
   },
   "keywords": [
     "jalali",
-    "persian",
-    "date",
-    "شمسی"
+    "persian-date",
+    "gregorian-to-jalali",
+    "solar-calendar",
+    "date-converter",
+    "farsi-date",
+    "iranian-calendar",
+    "شمسی",
+    "تاریخ-شمسی",
+    "تقویم-ایرانی",
+    "تبدیل-تاریخ",
+    "جلالی"
   ],
   "author": "Araz Rezapour",
   "license": "MIT",

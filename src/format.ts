@@ -41,7 +41,7 @@ const JALALI_WEEKDAYS = [
   "جمعه",
 ];
 const JALALI_QUARTERS = ["اول", "دوم", "سوم", "چهارم"];
-const JALALI_ORIGINAL_SUFFIXES = Array(31).fill("ام");
+const JALALI_ORINAL_SUFFIXES = Array(31).fill("ام");
 
 // Token map for formatting (advanced tokens: jMMM, jDo, jQo, jWo, 12-hour time, Z)
 const TOKEN_MAP: { [key: string]: (parts: JalaliDateParts) => string } = {
@@ -54,7 +54,7 @@ const TOKEN_MAP: { [key: string]: (parts: JalaliDateParts) => string } = {
   jM: (parts) => String(parts.month),
   jDD: (parts) => String(parts.day).padStart(2, "0"),
   jD: (parts) => String(parts.day),
-  jDo: (parts) => String(parts.day) + JALALI_ORIGINAL_SUFFIXES[parts.day - 1],
+  jDo: (parts) => String(parts.day) + JALALI_ORINAL_SUFFIXES[parts.day - 1],
   jQo: (parts) => JALALI_QUARTERS[Math.floor((parts.month - 1) / 3)],
   jWo: (parts) => {
     const { year, month, day } = parts;
@@ -93,15 +93,47 @@ const SORTED_TOKENS = Object.keys(TOKEN_MAP).sort(
   (a, b) => b.length - a.length
 );
 
-// Advanced formatting function with token replacement
+// Union of all supported tokens for type safety
+type FormatToken =
+  | "jYYYY"
+  | "jYY"
+  | "jMM"
+  | "jM"
+  | "jDD"
+  | "jD"
+  | "jDo"
+  | "jMMMM"
+  | "jMMM"
+  | "jW"
+  | "jQo"
+  | "jWo"
+  | "HH"
+  | "H"
+  | "hh"
+  | "h"
+  | "A"
+  | "a"
+  | "mm"
+  | "m"
+  | "ss"
+  | "s"
+  | "Z";
+
+// Helper for better autocomplete (avoids type widening)
+type LiteralUnion<T extends string> = T | (T & {});
+
+// Template literal type for format strings (combines strings with tokens for autocomplete and validation)
+type FormatString = `${string | LiteralUnion<FormatToken>}`;
+
+// Advanced formatting function with token replacement (typed for autocomplete)
 export function formatJalali(
   parts: JalaliDateParts,
-  formatStr: string,
-  usePersian = true
+  formatStr: FormatString,
+  usePersian: boolean = true
 ): string {
   let formatted = formatStr;
   for (const token of SORTED_TOKENS) {
-    const replacer = TOKEN_MAP[token];
+    const replacer = TOKEN_MAP[token as keyof typeof TOKEN_MAP];
     if (typeof replacer === "function") {
       formatted = formatted.replace(new RegExp(token, "g"), replacer(parts));
     }
@@ -112,7 +144,7 @@ export function formatJalali(
 // Parsing from string to JalaliDateParts (supports names and Persian digits)
 export function parseJalali(
   input: string,
-  formatStr: string
+  formatStr: FormatString
 ): JalaliDateParts | null {
   const latinInput = toLatinDigits(input);
   let year = 0,
@@ -129,6 +161,7 @@ export function parseJalali(
       break;
     }
   }
+
   // Extract numbers
   const numMatches = latinInput.match(/\d{1,4}/g) || [];
   if (numMatches.length >= 3) {
