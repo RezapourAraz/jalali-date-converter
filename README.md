@@ -193,9 +193,9 @@ MIT License – آزاد برای استفاده تجاری/غیرتجاری.
 
 ## Contribute
 
-Pull requests خوشحال‌کننده! Issue باز کن برای باگ/فیچر. سورس: [GitHub Repo](https://github.com/your-repo/jalali-date-converter).
+Pull requests خوشحال‌کننده! Issue باز کن برای باگ/فیچر. سورس: [GitHub Repo](https://github.com/RezapourAraz/jalali-date-converter).
 
-سوال داری؟ [Issues](https://github.com/your-repo/jalali-date-converter/issues) باز کن. 😊
+سوال داری؟ [Issues](https://github.com/RezapourAraz/jalali-date-converter/issues) باز کن. 😊
 
 ```
 
