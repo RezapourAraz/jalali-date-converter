@@ -1,25 +1,29 @@
 {
-  "name": "solar-jalali-ts",
-  "version": "1.0.0",
-  "description": "A standalone, lightweight Jalali date utility written in TypeScript.",
+  "name": "jalali-date-converter",
+  "version": "1.1.0",
+  "description": "Persian Jalali date converter and formatter",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node src/test.ts"
+    "test": "npm run build && node dist/test.js",
+    "test:dev": "ts-node test/test.ts"
   },
   "keywords": [
     "jalali",
-    "solar",
     "persian",
     "date",
-    "typescript"
+    "شمسی"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Araz Rezapour",
+  "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.12.12",
+    "@types/node": "^20.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
-  }
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }
