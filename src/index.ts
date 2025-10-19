@@ -1,23 +1,33 @@
+// src/index.ts – Barrel file with explicit imports to fix scope
+import {
+  gregorianToJalali,
+  jalaliToGregorian,
+  toJalali,
+  fromJalali,
+} from "./converter";
+import { addToJalali, subtractFromJalali } from "./manipulate";
 import {
   differenceInDays,
   differenceInMonths,
-  isAfter,
   isBefore,
+  isAfter,
   isSameDay,
 } from "./calculate";
-import { fromJalali, toJalali } from "./converter";
-import { formatJalali, parseJalali } from "./format";
-import { addToJalali, subtractFromJalali } from "./manipulate";
-
 import {
-  daysInJalaliMonth,
-  endOfJalaliMonth,
-  isJalaliLeapYear,
   isValidJalali,
+  isJalaliLeapYear,
+  daysInJalaliMonth,
   startOfJalaliMonth,
+  endOfJalaliMonth,
 } from "./validate";
+import { formatJalali, parseJalali } from "./format";
 
-export { gregorianToJalali, jalaliToGregorian } from "./converter";
+export {
+  gregorianToJalali,
+  jalaliToGregorian,
+  toJalali,
+  fromJalali,
+} from "./converter";
 export { addToJalali, subtractFromJalali } from "./manipulate";
 export {
   differenceInDays,
@@ -37,6 +47,7 @@ export { formatJalali, parseJalali } from "./format";
 
 export * from "./types";
 
+// Default export – shorthand now works with imports in scope
 export default {
   toJalali,
   fromJalali,
